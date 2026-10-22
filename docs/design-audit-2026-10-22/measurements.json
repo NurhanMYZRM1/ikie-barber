@@ -1,0 +1,608 @@
+{
+  "measurements": [
+    {
+      "name": "current-desktop",
+      "url": "http://localhost:3000/",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "GOOD HAIR.\nGOOD MOOD.\nANYWHERE.",
+      "priceY": 572.171875,
+      "sidebarOverflow": []
+    },
+    {
+      "name": "current-mobile",
+      "url": "http://localhost:3000/",
+      "width": 375,
+      "scrollWidth": 375,
+      "h1": "GOOD HAIR.\nGOOD MOOD.\nANYWHERE.",
+      "priceY": 463.78125,
+      "sidebarOverflow": []
+    },
+    {
+      "name": "current-mobile-bm-dark",
+      "url": "http://localhost:3000/",
+      "width": 375,
+      "scrollWidth": 375,
+      "h1": "RAMBUT KEMAS.\nHATI CERIA.\nDI MANA-MANA.",
+      "priceY": 463.78125,
+      "sidebarOverflow": []
+    },
+    {
+      "name": "booking-mobile",
+      "url": "http://localhost:3100/",
+      "width": 375,
+      "scrollWidth": 375,
+      "h1": "GOOD HAIR.\nGOOD MOOD.\nANYWHERE.",
+      "headingY": 476.78125,
+      "priceY": 1077.78125,
+      "sidebarOverflow": []
+    },
+    {
+      "name": "booking-selected-mobile",
+      "url": "http://localhost:3100/",
+      "width": 375,
+      "scrollWidth": 375,
+      "h1": "GOOD HAIR.\nGOOD MOOD.\nANYWHERE.",
+      "headingY": 139.78125,
+      "priceY": 1178.78125,
+      "sidebarOverflow": []
+    },
+    {
+      "name": "booking-housecall-mobile",
+      "url": "http://localhost:3100/",
+      "width": 375,
+      "scrollWidth": 375,
+      "h1": "GOOD HAIR.\nGOOD MOOD.\nANYWHERE.",
+      "headingY": 139.78125,
+      "priceY": 1293.78125,
+      "sidebarOverflow": []
+    },
+    {
+      "name": "booking-selected-desktop",
+      "url": "http://localhost:3100/",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "GOOD HAIR.\nGOOD MOOD.\nANYWHERE.",
+      "headingY": 248.171875,
+      "priceY": 1394.171875,
+      "sidebarOverflow": []
+    },
+    {
+      "name": "login-desktop",
+      "url": "http://localhost:3100/admin/login",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "OWNER LOGIN",
+      "sidebarOverflow": []
+    },
+    {
+      "name": "admin-home-1440",
+      "url": "http://localhost:3100/admin",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "TODAY",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 24,
+          "right": 199.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 211.6875,
+          "right": 301.6875
+        },
+        {
+          "text": "Home",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "Hours",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "History",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "Settings",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "View your shop",
+          "left": 24,
+          "right": 231
+        }
+      ]
+    },
+    {
+      "name": "admin-hours-1440",
+      "url": "http://localhost:3100/admin/hours",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "OPENING HOURS",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 24,
+          "right": 199.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 211.6875,
+          "right": 301.6875
+        },
+        {
+          "text": "Home",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "Hours",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "History",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "Settings",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "View your shop",
+          "left": 24,
+          "right": 231
+        }
+      ]
+    },
+    {
+      "name": "admin-history-1440",
+      "url": "http://localhost:3100/admin/history",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "EARNINGS HISTORY",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 24,
+          "right": 199.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 211.6875,
+          "right": 301.6875
+        },
+        {
+          "text": "Home",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "Hours",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "History",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "Settings",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "View your shop",
+          "left": 24,
+          "right": 231
+        }
+      ]
+    },
+    {
+      "name": "admin-settings-1440",
+      "url": "http://localhost:3100/admin/settings",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "h1": "SHOP SETTINGS",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 24,
+          "right": 199.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 211.6875,
+          "right": 301.6875
+        },
+        {
+          "text": "Home",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "Hours",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "History",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "Settings",
+          "left": 24,
+          "right": 231
+        },
+        {
+          "text": "View your shop",
+          "left": 24,
+          "right": 231
+        }
+      ]
+    },
+    {
+      "name": "admin-home-768",
+      "url": "http://localhost:3100/admin",
+      "width": 768,
+      "scrollWidth": 768,
+      "h1": "TODAY",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 20,
+          "right": 195.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 658,
+          "right": 748
+        },
+        {
+          "text": "Home",
+          "left": 62.734375,
+          "right": 126.734375
+        },
+        {
+          "text": "Hours",
+          "left": 252.234375,
+          "right": 316.234375
+        },
+        {
+          "text": "History",
+          "left": 441.734375,
+          "right": 507.625
+        },
+        {
+          "text": "Settings",
+          "left": 633.109375,
+          "right": 705.234375
+        },
+        {
+          "text": "View your shop ",
+          "left": 0,
+          "right": 0
+        }
+      ]
+    },
+    {
+      "name": "admin-hours-768",
+      "url": "http://localhost:3100/admin/hours",
+      "width": 768,
+      "scrollWidth": 768,
+      "h1": "OPENING HOURS",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 20,
+          "right": 195.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 658,
+          "right": 748
+        },
+        {
+          "text": "Home",
+          "left": 62.734375,
+          "right": 126.734375
+        },
+        {
+          "text": "Hours",
+          "left": 252.234375,
+          "right": 316.234375
+        },
+        {
+          "text": "History",
+          "left": 441.734375,
+          "right": 507.625
+        },
+        {
+          "text": "Settings",
+          "left": 633.109375,
+          "right": 705.234375
+        },
+        {
+          "text": "View your shop ",
+          "left": 0,
+          "right": 0
+        }
+      ]
+    },
+    {
+      "name": "admin-history-768",
+      "url": "http://localhost:3100/admin/history",
+      "width": 768,
+      "scrollWidth": 768,
+      "h1": "EARNINGS HISTORY",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 20,
+          "right": 195.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 658,
+          "right": 748
+        },
+        {
+          "text": "Home",
+          "left": 62.578125,
+          "right": 126.578125
+        },
+        {
+          "text": "Hours",
+          "left": 251.75,
+          "right": 315.75
+        },
+        {
+          "text": "History",
+          "left": 440.9375,
+          "right": 508.109375
+        },
+        {
+          "text": "Settings",
+          "left": 633.28125,
+          "right": 705.40625
+        },
+        {
+          "text": "View your shop ",
+          "left": 0,
+          "right": 0
+        }
+      ]
+    },
+    {
+      "name": "admin-settings-768",
+      "url": "http://localhost:3100/admin/settings",
+      "width": 768,
+      "scrollWidth": 768,
+      "h1": "SHOP SETTINGS",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 20,
+          "right": 195.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 658,
+          "right": 748
+        },
+        {
+          "text": "Home",
+          "left": 62.578125,
+          "right": 126.578125
+        },
+        {
+          "text": "Hours",
+          "left": 251.75,
+          "right": 315.75
+        },
+        {
+          "text": "History",
+          "left": 440.90625,
+          "right": 506.796875
+        },
+        {
+          "text": "Settings",
+          "left": 631.96875,
+          "right": 705.421875
+        },
+        {
+          "text": "View your shop ",
+          "left": 0,
+          "right": 0
+        }
+      ]
+    },
+    {
+      "name": "admin-home-375",
+      "url": "http://localhost:3100/admin",
+      "width": 375,
+      "scrollWidth": 375,
+      "h1": "TODAY",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 20,
+          "right": 195.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 265,
+          "right": 355
+        },
+        {
+          "text": "Home",
+          "left": 13.609375,
+          "right": 77.609375
+        },
+        {
+          "text": "Hours",
+          "left": 104.859375,
+          "right": 168.859375
+        },
+        {
+          "text": "History",
+          "left": 196.109375,
+          "right": 262
+        },
+        {
+          "text": "Settings",
+          "left": 289.234375,
+          "right": 361.359375
+        },
+        {
+          "text": "View your shop ",
+          "left": 0,
+          "right": 0
+        }
+      ]
+    },
+    {
+      "name": "admin-hours-375",
+      "url": "http://localhost:3100/admin/hours",
+      "width": 375,
+      "scrollWidth": 375,
+      "h1": "OPENING HOURS",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 20,
+          "right": 195.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 265,
+          "right": 355
+        },
+        {
+          "text": "Home",
+          "left": 13.609375,
+          "right": 77.609375
+        },
+        {
+          "text": "Hours",
+          "left": 104.859375,
+          "right": 168.859375
+        },
+        {
+          "text": "History",
+          "left": 196.109375,
+          "right": 262
+        },
+        {
+          "text": "Settings",
+          "left": 289.234375,
+          "right": 361.359375
+        },
+        {
+          "text": "View your shop ",
+          "left": 0,
+          "right": 0
+        }
+      ]
+    },
+    {
+      "name": "admin-history-375",
+      "url": "http://localhost:3100/admin/history",
+      "width": 375,
+      "scrollWidth": 375,
+      "h1": "EARNINGS HISTORY",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 20,
+          "right": 195.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 265,
+          "right": 355
+        },
+        {
+          "text": "Home",
+          "left": 13.453125,
+          "right": 77.453125
+        },
+        {
+          "text": "Hours",
+          "left": 104.375,
+          "right": 168.375
+        },
+        {
+          "text": "History",
+          "left": 195.3125,
+          "right": 262.484375
+        },
+        {
+          "text": "Settings",
+          "left": 289.40625,
+          "right": 361.53125
+        },
+        {
+          "text": "View your shop ",
+          "left": 0,
+          "right": 0
+        }
+      ]
+    },
+    {
+      "name": "admin-settings-375",
+      "url": "http://localhost:3100/admin/settings",
+      "width": 375,
+      "scrollWidth": 375,
+      "h1": "SHOP SETTINGS",
+      "sidebarOverflow": [
+        {
+          "text": "IKIE BARBER",
+          "left": 20,
+          "right": 195.6875
+        },
+        {
+          "text": "BM\nEN",
+          "left": 265,
+          "right": 355
+        },
+        {
+          "text": "Home",
+          "left": 13.453125,
+          "right": 77.453125
+        },
+        {
+          "text": "Hours",
+          "left": 104.375,
+          "right": 168.375
+        },
+        {
+          "text": "History",
+          "left": 195.28125,
+          "right": 261.171875
+        },
+        {
+          "text": "Settings",
+          "left": 288.09375,
+          "right": 361.546875
+        },
+        {
+          "text": "View your shop ",
+          "left": 0,
+          "right": 0
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,35 @@
+# Ikie Barber design audit — 22 October 2026
+
+The site has a coherent foundation: a recognizable logo, condensed headings, restrained black and white styling, consistent controls, translated English/Malay copy, and a usable mobile navigation pattern. It needs a focused usability and layout pass, rather than a new brand.
+
+## Scope and evidence
+
+- Inspected the running site at `http://localhost:3000`: it currently shows away mode, no booking picker, and the owner-entered note “sipp”. This is current data, not a hardcoded design requirement.
+- Inspected the same source in an isolated copy with the repository's in-memory Supabase fixture on port 3100. Viewed the available booking flow, selected time, house-call fields, owner login, Home, Hours, History and Settings. Used test credentials only.
+- Captured public views at 375 and 1440 pixels, including Malay/dark mode; owner pages at 375, 768 and 1440 pixels. No document-wide horizontal overflow in captured views, and no uncaught page errors recorded. An internal sidebar overflow still exists.
+- No real bookings, owner settings, earnings, or production database records were changed. Application source was not edited.
+- This is a visual/code audit, not a deployment, security, performance, full accessibility, or complete functional certification. No prior screenshot baseline exists, so visual-regression status is inconclusive. Confirmation and validation findings below are from code inspection, not a submitted booking. Fixed bars appearing partway through full-page screenshots are a screenshot artifact; they do not alone prove content is unreachable.
+
+## Findings, in priority order
+
+| Priority | Finding and evidence | Recommended improvement |
+|---|---|---|
+| High | Away mode contradicts the desktop bottom bar. The page says “Not available until further notice”, but the bar says “No time picked yet / Pick a time above to book” with no picker present. See `current-desktop.png`, `components/customer-timetable.tsx:309`. | Make the bar reflect availability. Away mode should explain booking is paused and provide the existing WhatsApp action. Distinguish temporary shop closure from disabled booking. |
+| High | The owner desktop header does not fit the 256px sidebar. At 1440px the language switch ends at x=301.7, approximately 46px beyond the sidebar boundary. See `admin-home-1440.png`, `app/admin/(dashboard)/layout.tsx:17`. | Stack brand and language controls inside the sidebar at desktop widths. Keep the compact mobile row. Check Malay and longer shop names. |
+| High | House-call confirmation uses “Where to find me” and the shop address/directions. The action returns shop location for every area; the confirmation has no location-specific branch. It also says “You’re booked” and then “so I can confirm”, which implies conflicting completion states. Source: `app/booking-actions.ts`, `components/customer-timetable.tsx:121`. | Show travel directions only for shop visits; show a house-call summary for house calls. Make saved-booking status unambiguous and WhatsApp's role clear. |
+| Medium | The hero occupies substantial space without practical service information. The current description is empty, leaving just the slogan. In the fixture, the mobile booking heading starts around y=477; desktop leaves a large unused right-hand area. See public screenshots, `app/page.tsx:45`. | Preserve Oswald and the slogan, shorten the composition, and add concise bilingual shop/house-call coverage. Put useful booking information in the first screen. |
+| Medium | Pricing is below the entire time picker and, after selection, below the customer form. Initial mobile price heading is around y=1078. Location/price appears only after selecting a slot. See `booking-mobile.png`, `booking-selected-desktop.png`, `app/page.tsx:63`. | Introduce a compact price/service summary before booking details. Use the existing price source. On desktop pair the booking area with prices/supporting details to use space intentionally. |
+| Medium | Mobile's sticky bar hides all date/time summary text (`hidden sm:block`). After selection it shows only “Book this time”. The newly revealed form sits after a long grid of slots. Source: `components/customer-timetable.tsx:354`. | Retain a compact chosen-date/time summary on mobile and orient the user toward the details form. Add an obvious way to change the selection, appropriate scroll/focus handling, and measured bottom spacing. |
+| Medium | Upcoming bookings come after availability, four metrics, earnings entries/history and a status preview. On the empty mobile fixture they appear well below the first screen. See `admin-home-375.png`, `app/admin/(dashboard)/page.tsx`. | Bring upcoming appointments near the top. Keep today's earnings prominent, compress secondary totals, and give operational information priority over empty-state decoration. |
+| Medium | Booking field errors are not associated using `aria-describedby` or `aria-invalid`. Form labels are present; the issue is disconnected validation feedback, not wholesale missing labels. Source: `components/customer-timetable.tsx:259`, `components/feedback.tsx`. | Give errors stable IDs, connect them to inputs, announce failure clearly, and focus the first invalid field or a useful error summary. Manage focus when the form is replaced by confirmation. |
+| Low | Settings offers a “Logo or shop photo URL” but the rendered brand always uses `/logo.png`; the public page never reads `shop.logo_url`. Source: `components/settings-form.tsx:57`, `components/brand.tsx`, `app/page.tsx`. | Resolve the misleading setting: either use the configured image with a local fallback, or clearly explain/remove the unsupported control after checking compatibility. Do not fabricate shop imagery. |
+
+## Visual direction
+
+Keep the local barber identity: bold condensed display typography, neutral surfaces, strong primary actions, and a restrained color vocabulary for status. Use a tighter mobile intro, legible booking sections, aligned price rows and tabular numbers. Desktop should have a deliberate composition rather than a narrow mobile form on a wide empty canvas. Keep the admin quieter and denser than the public page. The simple login and weekly-hours list are already reasonable foundations.
+
+Preserve English/Malay, light/dark themes, the existing logo, prices, 30-minute slots, timezone behavior, owner-only access, and the address disclosure flow. Do not infer what “Base price” includes or how surcharges are calculated. The displayed after-midnight surcharge and the scheduler's midnight close should be clarified in copy without inventing bookable times or pricing rules.
+
+## Handoff
+
+Use `CLAUDE_PROMPT.md` in this folder. It includes the implementation priorities, exact skill paths available to Claude, constraints and acceptance checks. Screenshots and `measurements.json` are the baseline evidence; geometry fields ending in `Y` are viewport-relative at capture time, so use the initial unscrolled capture for above-the-fold comparisons.

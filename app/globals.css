@@ -1,0 +1,129 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+:root {
+  color-scheme: light dark;
+  --canvas: #f5f5f4;
+  --surface: #fff;
+  --ink: #161616;
+  --muted: #5e5e5e;
+  --line: #e2e2e2;
+  --accent: #161616;
+  --on-accent: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #0d0d0d;
+    --surface: #171717;
+    --ink: #f0f0f0;
+    --muted: #a6a6a6;
+    --line: #2f2f2f;
+    --accent: #f0f0f0;
+    --on-accent: #111;
+  }
+}
+html {
+  /* Keep focused fields and anchor targets clear of fixed bottom bars. */
+  scroll-padding-bottom: calc(6rem + env(safe-area-inset-bottom));
+}
+body {
+  @apply bg-canvas text-ink antialiased;
+}
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+button,
+a {
+  touch-action: manipulation;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+input,
+select,
+textarea {
+  @apply min-h-11 w-full rounded-md border border-line bg-surface px-3 py-2 text-base text-ink;
+}
+input[type="checkbox"] {
+  @apply h-5 min-h-0 w-5 accent-accent;
+}
+label {
+  @apply block text-sm font-medium;
+}
+label > input,
+label > select,
+label > textarea {
+  @apply mt-2;
+}
+@layer components {
+  .card {
+    @apply rounded-lg border border-line bg-surface;
+  }
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 bg-accent text-on-accent hover:bg-accent/85;
+  }
+  .btn-secondary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-5 py-3 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 border border-line bg-surface text-ink hover:bg-ink/5;
+  }
+  .eyebrow {
+    @apply text-sm text-muted;
+  }
+  .page-title {
+    @apply font-display text-3xl font-semibold uppercase tracking-wide text-balance;
+  }
+  .section-title {
+    @apply font-display text-2xl font-medium uppercase tracking-wide text-balance;
+  }
+  .step-label {
+    @apply text-sm font-semibold;
+  }
+  /* A dashed "ticket" for the chosen slot, echoing the dashed price rows. */
+  .ticket {
+    @apply rounded-lg border border-dashed border-ink/30 bg-surface p-4;
+  }
+  .field-error {
+    @apply mt-2 text-sm text-red-700 dark:text-red-300;
+  }
+}
+dialog {
+  @apply fixed inset-x-0 bottom-0 top-auto m-0 max-h-[90dvh] w-full max-w-none rounded-t-xl border border-line bg-surface p-6 text-ink shadow-2xl sm:inset-0 sm:m-auto sm:max-w-md sm:rounded-xl;
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 55%);
+}
+dialog[open] {
+  animation: appear 160ms ease-out;
+}
+/* While the phone keyboard is open the sticky booking bar would cover fields;
+   the form's own Book button stays reachable. */
+@media (max-width: 639px) {
+  body:has(#booking-form :is(input, select, textarea):focus) .booking-bar {
+    display: none;
+  }
+}
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

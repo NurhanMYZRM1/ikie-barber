@@ -1,0 +1,40 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "local-db",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "--env-file-if-exists=.env.local",
+        "tests/fixtures/supabase-server.mjs"
+      ],
+      "port": 54329
+    },
+    {
+      "name": "local",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54329",
+        "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=test-publishable-key",
+        "OWNER_USERNAME=test-owner",
+        "OWNER_EMAIL=owner@example.test",
+        "NEXT_DIST_DIR=.next-qa",
+        "npx",
+        "next",
+        "dev",
+        "--port",
+        "3200"
+      ],
+      "port": 3200
+    }
+  ]
+}

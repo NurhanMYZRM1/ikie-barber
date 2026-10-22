@@ -1,0 +1,230 @@
+{
+  "measurements": {
+    "public-320": {
+      "overflowX": 0,
+      "switchInsideAside": null,
+      "bookingHeadingY": 477,
+      "priceHeadingY": 1078,
+      "barHeight": null
+    },
+    "public-375": {
+      "overflowX": 0,
+      "switchInsideAside": null,
+      "bookingHeadingY": 0,
+      "priceHeadingY": 0,
+      "barHeight": null
+    },
+    "public-768": {
+      "overflowX": 0,
+      "switchInsideAside": null,
+      "bookingHeadingY": 585,
+      "priceHeadingY": 1126,
+      "barHeight": null
+    },
+    "public-1024": {
+      "overflowX": 0,
+      "switchInsideAside": null,
+      "bookingHeadingY": 0,
+      "priceHeadingY": 0,
+      "barHeight": null
+    },
+    "public-1440": {
+      "overflowX": 0,
+      "switchInsideAside": null,
+      "bookingHeadingY": 585,
+      "priceHeadingY": 1178,
+      "barHeight": null
+    },
+    "public-375-bm-dark": {
+      "overflowX": 0,
+      "switchInsideAside": null,
+      "bookingHeadingY": 0,
+      "priceHeadingY": 0,
+      "barHeight": null
+    },
+    "selected-375": {
+      "overflowX": 0,
+      "switchInsideAside": null,
+      "bookingHeadingY": 140,
+      "priceHeadingY": 1179,
+      "barHeight": null
+    },
+    "selected-1440": {
+      "overflowX": 0,
+      "switchInsideAside": null,
+      "bookingHeadingY": 208,
+      "priceHeadingY": 1239,
+      "barHeight": null
+    },
+    "away-375": {
+      "overflowX": 0,
+      "switchInsideAside": null,
+      "bookingHeadingY": -1,
+      "priceHeadingY": 464,
+      "barHeight": null
+    },
+    "away-1440": {
+      "overflowX": 0,
+      "switchInsideAside": null,
+      "bookingHeadingY": -1,
+      "priceHeadingY": 0,
+      "barHeight": null
+    },
+    "admin-home-375": {
+      "overflowX": 0,
+      "asideRight": 0,
+      "switchRight": 0,
+      "switchInsideAside": true,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-hours-375": {
+      "overflowX": 0,
+      "asideRight": 0,
+      "switchRight": 0,
+      "switchInsideAside": true,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-history-375": {
+      "overflowX": 0,
+      "asideRight": 0,
+      "switchRight": 0,
+      "switchInsideAside": true,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-settings-375": {
+      "overflowX": 0,
+      "asideRight": 0,
+      "switchRight": 0,
+      "switchInsideAside": true,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-home-768": {
+      "overflowX": 0,
+      "asideRight": 768,
+      "switchRight": 748,
+      "switchInsideAside": true,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-hours-768": {
+      "overflowX": 0,
+      "asideRight": 768,
+      "switchRight": 748,
+      "switchInsideAside": true,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-history-768": {
+      "overflowX": 0,
+      "asideRight": 768,
+      "switchRight": 748,
+      "switchInsideAside": true,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-settings-768": {
+      "overflowX": 0,
+      "asideRight": 768,
+      "switchRight": 748,
+      "switchInsideAside": true,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-home-1024": {
+      "overflowX": 0,
+      "asideRight": 0,
+      "switchRight": 0,
+      "switchInsideAside": true,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-hours-1024": {
+      "overflowX": 0,
+      "asideRight": 256,
+      "switchRight": 302,
+      "switchInsideAside": false,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-history-1024": {
+      "overflowX": 0,
+      "asideRight": 256,
+      "switchRight": 302,
+      "switchInsideAside": false,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-settings-1024": {
+      "overflowX": 0,
+      "asideRight": 256,
+      "switchRight": 302,
+      "switchInsideAside": false,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-home-1440": {
+      "overflowX": 0,
+      "asideRight": 256,
+      "switchRight": 302,
+      "switchInsideAside": false,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-hours-1440": {
+      "overflowX": 0,
+      "asideRight": 256,
+      "switchRight": 302,
+      "switchInsideAside": false,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-history-1440": {
+      "overflowX": 0,
+      "asideRight": 256,
+      "switchRight": 302,
+      "switchInsideAside": false,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-settings-1440": {
+      "overflowX": 0,
+      "asideRight": 0,
+      "switchRight": 0,
+      "switchInsideAside": true,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    },
+    "admin-home-1440-bm": {
+      "overflowX": 0,
+      "asideRight": 256,
+      "switchRight": 302,
+      "switchInsideAside": false,
+      "bookingHeadingY": -1,
+      "priceHeadingY": -1,
+      "barHeight": null
+    }
+  },
+  "errors": [
+    "housecall-validation-success-375: locator.waitFor: Timeout 30000ms exceeded."
+  ]
+}
