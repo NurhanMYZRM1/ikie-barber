@@ -3,20 +3,27 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { isConfigured } from "@/lib/supabase/config";
 import { requireOwner } from "./auth";
 import { demoShop, demoHours } from "./demo";
-import type { Shop, Hours, Earning, DailyTotal, Booking } from "./types";
+import type { Shop, PublicShop, Hours, Earning, DailyTotal, Booking } from "./types";
+
+// Matches the columns visitors are granted; the address and map link are not among them.
+const PUBLIC_SHOP =
+  "id,name,description,whatsapp_number,logo_url,timezone,currency,is_available,unavailable_until,unavailable_note";
 
 // Public reads contain no financial queries. RLS independently enforces this split.
 export async function getPublicShop() {
-  if (!isConfigured()) return { shop: demoShop, hours: demoHours, preview: true };
+  if (!isConfigured()) {
+    const { address: _address, maps_url: _maps, ...shop } = demoShop;
+    return { shop: shop as PublicShop, hours: demoHours, preview: true };
+  }
   const db = createPublicClient();
   const [shop, hours] = await Promise.all([
-    db.from("shop_settings").select("*").eq("id", 1).single(),
+    db.from("shop_settings").select(PUBLIC_SHOP).eq("id", 1).single(),
     db.from("weekly_hours").select("*").order("day_of_week"),
   ]);
   if (shop.error || hours.error)
     throw new Error("Unable to load the shop. Check migrations and seed data.");
   return {
-    shop: shop.data as Shop,
+    shop: shop.data as PublicShop,
     hours: hours.data as Hours[],
     preview: false,
   };

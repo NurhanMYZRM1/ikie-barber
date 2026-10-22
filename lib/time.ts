@@ -1,6 +1,6 @@
 import { addDays, format, isMatch, parseISO, startOfMonth, startOfWeek } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
-import type { Hours, Shop } from "./types";
+import type { Hours, PublicShop } from "./types";
 import { dateLocale, translate, type Lang } from "./i18n";
 
 export const DEFAULT_TIMEZONE = "Asia/Kuala_Lumpur";
@@ -53,7 +53,7 @@ export function millisecondsUntilMidnight(timezone: string, now = new Date()) {
 /** 'Back on' means available from 00:00 on that date in the shop timezone.
  * No scheduled job or write is needed; an expired away flag is ignored on reads. */
 export function isShopAvailable(
-  shop: Pick<Shop, "is_available" | "unavailable_until" | "timezone">,
+  shop: Pick<PublicShop, "is_available" | "unavailable_until" | "timezone">,
   now = new Date(),
 ) {
   return (
@@ -65,7 +65,7 @@ export function isShopAvailable(
 const until = (time: string) => (time.slice(0, 5) === "00:00" ? "24:00" : time.slice(0, 5));
 export type ShopStatus = { kind: "open" | "closed" | "away"; label: string; note?: string | null };
 export function getShopStatus(
-  shop: Shop,
+  shop: PublicShop,
   hours: Hours[],
   now = new Date(),
   lang: Lang = "en",
@@ -131,7 +131,7 @@ export type PreferredTime = { start: string; label: string; booked: boolean };
 /** Bookable 30-minute slots from opening time, skipping the break and closing.
  * Booked slots stay in the list (flagged) so the timetable can gray them out. */
 export function getPreferredTimes(
-  shop: Shop,
+  shop: PublicShop,
   hours: Hours[],
   day: string,
   now = new Date(),

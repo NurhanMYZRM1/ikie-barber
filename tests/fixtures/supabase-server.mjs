@@ -111,6 +111,12 @@ const server = createServer(async (req, res) => {
       );
       if (table === "rpc/is_shop_owner")
         return (await tx.query("select public.is_shop_owner() as value")).rows[0].value;
+      if (table === "rpc/booking_directions")
+        return (
+          await tx.query("select to_jsonb(t) as value from public.booking_directions($1) t", [
+            body.booking_id,
+          ])
+        ).rows.map((row) => row.value);
       if (table === "rpc/daily_earnings_totals")
         return (
           await tx.query(

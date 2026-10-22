@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getShopStatus } from "@/lib/time";
-import type { Shop, Hours } from "@/lib/types";
+import type { PublicShop, Hours } from "@/lib/types";
 import { useLang } from "./lang";
 
 // The initial clock comes from SSR, so the first client render matches exactly.
@@ -19,7 +19,7 @@ export function ShopStatus({
   hours,
   initial,
 }: {
-  shop: Shop;
+  shop: PublicShop;
   hours: Hours[];
   initial: string;
 }) {

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { ArrowUpRight, Check, CircleCheck, House, MapPin, MessageCircle } from "lucide-react";
-import type { Hours, Shop } from "@/lib/types";
+import type { Hours, PublicShop } from "@/lib/types";
 import { AREAS } from "@/lib/types";
 import {
   calendarLabel,
@@ -38,7 +38,7 @@ export function CustomerTimetable({
   booked,
   initial,
 }: {
-  shop: Shop;
+  shop: PublicShop;
   hours: Hours[];
   booked: string[];
   initial: string;

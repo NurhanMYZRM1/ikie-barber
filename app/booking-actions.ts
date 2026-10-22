@@ -47,7 +47,17 @@ export async function bookSlot(input: unknown): Promise<BookingResult> {
     return { ok: false, message: "Couldn’t save your booking. Please try again." };
   revalidatePath("/");
   // Directions only for shop visits; a house-call customer is never sent to the shop.
-  return booking.area === "Shop"
-    ? { ok: true, message: "You’re booked.", address: shop.address, maps_url: shop.maps_url }
-    : { ok: true, message: "You’re booked." };
+  if (booking.area !== "Shop") return { ok: true, message: "You’re booked." };
+  // The database gives the address only to the holder of this saved booking. If the
+  // lookup fails the customer still sees "I’ll send you the location on WhatsApp."
+  const { data } = await createPublicClient().rpc("booking_directions", {
+    booking_id: booking.id,
+  });
+  const place = data?.[0];
+  return {
+    ok: true,
+    message: "You’re booked.",
+    address: place?.address ?? "",
+    maps_url: place?.maps_url ?? "",
+  };
 }

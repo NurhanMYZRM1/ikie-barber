@@ -19,8 +19,8 @@ test("public shop is responsive and owner routes need login", async ({ page }) =
   await expect(page.getByRole("heading", { name: "Price list" })).toBeVisible();
   await expect(page.getByText("Signature haircut")).toHaveCount(0);
   await expect(page.getByRole("link", { name: /owner|login/i })).toHaveCount(0);
-  // The address is only revealed after booking.
-  await expect(page.getByText("Kuala Lumpur, Malaysia")).toHaveCount(0);
+  // The address is only revealed after booking: not on screen, not in the page data.
+  expect(await page.content()).not.toContain("Kuala Lumpur, Malaysia");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );

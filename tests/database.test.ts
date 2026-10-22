@@ -41,7 +41,17 @@ async function asRole(role: "anon" | "authenticated", id: string, sql: string) {
 }
 describe("database security", () => {
   it("anon can read public details but zero earnings", async () => {
-    expect((await asRole("anon", "", "select * from public.shop_settings")).rows).toHaveLength(1);
+    expect(
+      (await asRole("anon", "", "select name, whatsapp_number from public.shop_settings")).rows,
+    ).toHaveLength(1);
+    // The address and map link are only handed out after a booking.
+    for (const column of ["address", "maps_url", "*"])
+      await expect(
+        asRole("anon", "", `select ${column} from public.shop_settings`),
+      ).rejects.toThrow(/permission denied/);
+    expect(
+      (await asRole("authenticated", owner, "select address from public.shop_settings")).rows,
+    ).toEqual([{ address: "Kuala Lumpur, Malaysia" }]);
     expect((await asRole("anon", "", "select * from public.weekly_hours")).rows).toHaveLength(7);
     expect((await asRole("anon", "", "select * from public.services")).rows).toHaveLength(3);
     expect((await asRole("anon", "", "select * from public.earnings")).rows).toHaveLength(0);
@@ -181,6 +191,29 @@ describe("bookings", () => {
       (await asRole("authenticated", owner, "select name, phone from public.bookings")).rows,
     ).toEqual([{ name: "Ali", phone: "60123456789" }]);
   });
+  it("gives the shop address only to the holder of a shop-visit booking", async () => {
+    const shopVisit = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const houseCall = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    await asRole(
+      "anon",
+      "",
+      `insert into public.bookings(id, slot_start, name, phone, area) values
+       ('${shopVisit}', ${slot(5)}, 'Ali', '60123456789', 'Shop')`,
+    );
+    await asRole(
+      "anon",
+      "",
+      `insert into public.bookings(id, slot_start, name, phone, area, address) values
+       ('${houseCall}', ${slot(6)}, 'Ali', '60123456789', 'Bangi', 'No. 1')`,
+    );
+    const directions = (id: string) =>
+      asRole("anon", "", `select * from public.booking_directions('${id}')`);
+    expect((await directions(shopVisit)).rows).toEqual([
+      { address: "Kuala Lumpur, Malaysia", maps_url: "" },
+    ]);
+    expect((await directions(houseCall)).rows).toHaveLength(0);
+    expect((await directions("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee")).rows).toHaveLength(0);
+  });
   it("rejects a second booking for the same slot", async () => {
     await expect(
       asRole("anon", "", book(slot(1)).replace("'Ali'", "'Abu'")),
@@ -218,7 +251,7 @@ describe("bookings", () => {
     ).toHaveLength(0);
     expect(
       (await asRole("authenticated", owner, "delete from public.bookings returning id")).rows,
-    ).toHaveLength(2);
+    ).toHaveLength(4);
   });
   it("seeded hours close at midnight", async () => {
     const rows = (await db.query("select close_time::text from public.weekly_hours")).rows;

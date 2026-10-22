@@ -13,6 +13,8 @@ export type Shop = {
   unavailable_until: string | null;
   unavailable_note: string | null;
 };
+// What visitors may see: the address and map link are only given out after booking.
+export type PublicShop = Omit<Shop, "address" | "maps_url">;
 export type Hours = {
   day_of_week: number;
   is_open: boolean;
