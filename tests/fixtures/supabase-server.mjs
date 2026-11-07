@@ -6,7 +6,6 @@ import { createServer } from "node:http";
 import { readFileSync, readdirSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 
-const db = new PGlite();
 const owner = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 // The local preview can set its own owner password via .env.local; tests use the default.
 const ownerPassword = process.env.LOCAL_OWNER_PASSWORD || "test-password-only";
@@ -21,7 +20,11 @@ const user = {
 };
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString("base64url");
 const token = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: owner, aud: "authenticated", role: "authenticated", exp: Math.floor(Date.now() / 1000) + 86400, iat: Math.floor(Date.now() / 1000) })}.test-signature`;
-await db.exec(`create role anon; create role authenticated; create schema auth;
+// A fresh in-memory database per reset, so one test's price edits never leak into the next.
+let db;
+async function setup() {
+  const fresh = new PGlite();
+  await fresh.exec(`create role anon; create role authenticated; create schema auth;
   create table auth.users(id uuid primary key);
   create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
   grant usage on schema auth to anon,authenticated;
@@ -29,10 +32,15 @@ await db.exec(`create role anon; create role authenticated; create schema auth;
   insert into auth.users values ('${owner}');
   alter default privileges in schema public grant all on tables to anon, authenticated;
   alter default privileges in schema public grant all on functions to anon, authenticated;`);
-for (const name of readdirSync("supabase/migrations").sort())
-  await db.exec(readFileSync(`supabase/migrations/${name}`, "utf8"));
-await db.exec(readFileSync("supabase/seed.sql", "utf8"));
-await db.exec(`insert into private.shop_owner(user_id) values ('${owner}');`);
+  for (const name of readdirSync("supabase/migrations").sort())
+    await fresh.exec(readFileSync(`supabase/migrations/${name}`, "utf8"));
+  await fresh.exec(readFileSync("supabase/seed.sql", "utf8"));
+  await fresh.exec(`insert into private.shop_owner(user_id) values ('${owner}');`);
+  const old = db;
+  db = fresh;
+  await old?.close();
+}
+await setup();
 
 // Whitelist SQL identifiers even in test tooling. Values are always parameters.
 const tables = {
@@ -43,6 +51,7 @@ const tables = {
     "address",
     "maps_url",
     "whatsapp_number",
+    "instagram_url",
     "logo_url",
     "timezone",
     "currency",
@@ -52,9 +61,62 @@ const tables = {
     "updated_at",
   ],
   weekly_hours: ["day_of_week", "is_open", "open_time", "close_time", "break_start", "break_end"],
-  services: ["id", "name", "price", "duration_minutes", "is_active", "sort_order"],
+  services: [
+    "id",
+    "name",
+    "description",
+    "shop_price",
+    "university_price",
+    "area_prices",
+    "duration_minutes",
+    "is_active",
+    "sort_order",
+  ],
+  house_call_areas: ["id", "name", "is_active", "sort_order"],
+  extra_charges: [
+    "id",
+    "label",
+    "amount",
+    "starts_from",
+    "notice_hours",
+    "is_active",
+    "sort_order",
+  ],
+  university_visits: [
+    "id",
+    "reserved_from",
+    "starts_at",
+    "ends_at",
+    "reserved_until",
+    "area_label",
+    "meeting_point",
+    "map_url",
+    "services",
+    "is_open",
+  ],
   earnings: ["id", "amount", "note", "payment_method", "business_date", "created_at"],
-  bookings: ["id", "slot_start", "name", "phone", "area", "address", "note", "created_at"],
+  bookings: [
+    "id",
+    "slot_start",
+    "slot_end",
+    "kind",
+    "name",
+    "phone",
+    "area",
+    "area_id",
+    "address",
+    "note",
+    "visit_id",
+    "service_id",
+    "service_name",
+    "price",
+    "charges",
+    "total",
+    "meeting_area",
+    "meeting_point",
+    "map_url",
+    "created_at",
+  ],
 };
 function field(table, name) {
   if (!tables[table]?.includes(name)) throw new Error("Unknown field");
@@ -81,10 +143,7 @@ const server = createServer(async (req, res) => {
   try {
     if (url.pathname === "/health") return send(200, { ok: true });
     if (url.pathname === "/test/reset") {
-      await db.exec(
-        "delete from public.bookings; delete from public.earnings; delete from public.services; delete from public.weekly_hours; delete from public.shop_settings;",
-      );
-      await db.exec(readFileSync("supabase/seed.sql", "utf8"));
+      await setup();
       return send(200, { ok: true });
     }
     if (url.pathname === "/auth/v1/token") {
@@ -129,7 +188,7 @@ const server = createServer(async (req, res) => {
       for (const [key, value] of url.searchParams) {
         if (["select", "order", "offset", "limit", "on_conflict"].includes(key)) continue;
         const [op] = value.split(".", 1);
-        const sign = { eq: "=", gte: ">=", lt: "<" }[op];
+        const sign = { eq: "=", gt: ">", gte: ">=", lt: "<", lte: "<=" }[op];
         if (!sign) throw new Error("Unsupported filter");
         args.push(value.slice(op.length + 1));
         clauses.push(`${field(table, key)} ${sign} $${args.length}`);

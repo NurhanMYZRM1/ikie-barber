@@ -1,10 +1,9 @@
 "use server";
 // Public booking: runs as the anon role. RLS lets visitors insert, never read details.
+// The database checks hours, breaks, away mode, visits, overlaps and the agreed price.
 import { revalidatePath } from "next/cache";
-import { formatInTimeZone } from "date-fns-tz";
 import { getPublicShop } from "@/lib/data";
 import { createPublicClient } from "@/lib/supabase/public";
-import { getPreferredTimes } from "@/lib/time";
 import { bookingSchema, validationFields } from "@/lib/validation";
 import type { ActionResult } from "@/lib/types";
 
@@ -18,38 +17,39 @@ export async function bookSlot(input: unknown): Promise<BookingResult> {
       message: "Check the highlighted fields.",
       fields: validationFields(parsed.error),
     };
-  const { shop, hours, preview } = await getPublicShop();
+  const { preview } = await getPublicShop();
   if (preview) return { ok: false, message: "Booking is off in the sample preview." };
   const booking = parsed.data;
-  const day = formatInTimeZone(new Date(booking.slot_start), shop.timezone, "yyyy-MM-dd");
-  // Only real open slots (hours, breaks, away mode). Taken slots are left to the
-  // database, so a retry of this same booking can still be recognised below.
-  const slot = getPreferredTimes(shop, hours, day, new Date()).find(
-    (time) => new Date(time.start).getTime() === new Date(booking.slot_start).getTime(),
-  );
-  if (!slot) return { ok: false, message: "That time isn’t available. Choose another." };
   const { error } = await createPublicClient()
     .from("bookings")
     .insert({
       ...booking,
-      slot_start: slot.start,
-      address: booking.area === "Shop" ? null : booking.address,
+      address: booking.kind === "house_call" ? booking.address : null,
       note: booking.note || null,
     });
-  // Same id already saved: the first try worked but its response was lost.
-  const retried = error?.code === "23505" && error.message.includes("bookings_pkey");
-  // Otherwise the unique slot_start constraint settles two people booking at once.
-  if (error?.code === "23505" && !retried) {
-    revalidatePath("/"); // Refresh booked times so the taken slot shows crossed out at once.
-    return { ok: false, message: "That time was just booked. Choose another." };
-  }
-  if (error && !retried)
+  // Same id already saved: the first try worked but its response was lost. Start times
+  // are no longer unique, so the booking id is the only unique value left.
+  const retried = error?.code === "23505";
+  if (error && !retried) {
+    // Refresh booked times and prices, so the page shows what changed at once.
+    revalidatePath("/", "layout");
+    if (error.code === "23P01")
+      return { ok: false, message: "That time was just booked. Choose another." };
+    if (error.message.includes("Price changed"))
+      return { ok: false, message: "Prices just changed. Check the new total, then book again." };
+    if (error.message.includes("available service"))
+      return { ok: false, message: "That haircut isn’t available there now. Choose another." };
+    if (error.message.includes("available time"))
+      return { ok: false, message: "That time isn’t available. Choose another." };
     return { ok: false, message: "Couldn’t save your booking. Please try again." };
-  revalidatePath("/");
-  // Directions only for shop visits; a house-call customer is never sent to the shop.
-  if (booking.area !== "Shop") return { ok: true, message: "You’re booked." };
-  // The database gives the address only to the holder of this saved booking. If the
-  // lookup fails the customer still sees "I’ll send you the location on WhatsApp."
+  }
+  revalidatePath("/", "layout");
+  // Only shop bookings receive directions. Uni customers must agree on a location
+  // directly with the owner, even if an older visit has stored location details.
+  if (booking.kind !== "shop") return { ok: true, message: "You’re booked." };
+  // The database gives directions only to the holder of this saved booking: the shop
+  // address. If the lookup fails the customer
+  // still sees what to do next.
   const { data } = await createPublicClient().rpc("booking_directions", {
     booking_id: booking.id,
   });

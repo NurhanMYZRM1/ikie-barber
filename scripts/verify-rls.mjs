@@ -16,13 +16,24 @@ if (earnings.error) throw new Error(`Could not verify RLS: ${earnings.error.mess
 if (earnings.data.length) throw new Error("SECURITY FAILURE: a logged-out user can read earnings!");
 const totals = await db.rpc("daily_earnings_totals");
 if (!totals.error) throw new Error("SECURITY FAILURE: public callers can execute earnings totals!");
-const slots = await db.from("bookings").select("slot_start");
+const slots = await db.from("bookings").select("slot_start,slot_end");
 if (slots.error) throw new Error(`Booked times should be public: ${slots.error.message}`);
-const customers = await db.from("bookings").select("name,phone,address");
+const customers = await db.from("bookings").select("name,phone,address,total");
 if (!customers.error)
   throw new Error("SECURITY FAILURE: logged-out users can read booking details!");
+const visits = await db.from("university_visits").select("starts_at,area_label");
+if (visits.error) throw new Error(`Uni visits should be public: ${visits.error.message}`);
+const points = await db.from("university_visits").select("meeting_point,map_url");
+if (!points.error)
+  throw new Error("SECURITY FAILURE: logged-out users can read exact meeting points!");
+// Aimed at an id that cannot exist, so this check never changes data even if it got through.
+const prices = await db
+  .from("services")
+  .update({ shop_price: 0 })
+  .eq("id", "00000000-0000-4000-8000-000000000000");
+if (!prices.error) throw new Error("SECURITY FAILURE: logged-out users may write prices!");
 console.log(
-  "PASS: public shop is readable without its address, anonymous earnings return zero rows, the totals function is denied, and bookings expose start times only.",
+  "PASS: public shop is readable without its address, anonymous earnings return zero rows, the totals function is denied, bookings expose times only, uni meeting points stay private, and prices cannot be changed.",
 );
 console.log(
   "For a meaningful live check, first confirm the owner dashboard contains at least one saved entry.",

@@ -95,6 +95,11 @@ export function SettingsForm({ shop }: { shop: Shop }) {
         </span>
         <FieldError message={result?.fields?.whatsapp_number} />
       </label>
+      <label>
+        {t("Instagram link (optional)")}
+        <input name="instagram_url" type="url" defaultValue={shop.instagram_url} />
+        <FieldError message={result?.fields?.instagram_url} />
+      </label>
       <div className="border-t border-line pt-6">
         <h2 className="mb-5 font-semibold">{t("Local preferences")}</h2>
         <div className="space-y-5">
