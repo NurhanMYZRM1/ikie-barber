@@ -23,7 +23,12 @@ export default async function AdminPage() {
         days={days}
         initial={now.toISOString()}
         upcoming={
-          <BookingsList bookings={bookings} timezone={shop.timezone} moreHref="/admin/bookings" />
+          <BookingsList
+            bookings={bookings}
+            timezone={shop.timezone}
+            currency={shop.currency}
+            moreHref="/admin/bookings"
+          />
         }
       />
     </>

@@ -17,7 +17,7 @@ export default async function HoursPage() {
         <h1 className="page-title">{t("Opening hours")}</h1>
         <p className="mt-3 text-sm text-muted">
           {t(
-            "Customers can book 30-minute slots inside these hours. A closing time of 12:00 AM means midnight.",
+            "Customers book inside these hours; a longer haircut needs a longer gap. A closing time of 12:00 AM means midnight. Uni visits close these times while you are away on campus.",
           )}
         </p>
       </header>

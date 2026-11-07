@@ -1,16 +1,27 @@
 import "server-only";
+import { cache } from "react";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isConfigured } from "@/lib/supabase/config";
 import { requireOwner } from "./auth";
-import { demoShop, demoHours } from "./demo";
-import type { Shop, PublicShop, Hours, Earning, DailyTotal, Booking } from "./types";
+import { demoShop, demoHours, demoCatalog } from "./demo";
+import type {
+  Shop,
+  PublicShop,
+  Hours,
+  Earning,
+  DailyTotal,
+  Booking,
+  Busy,
+  Catalog,
+  Visit,
+} from "./types";
 
 // Matches the columns visitors are granted; the address and map link are not among them.
 const PUBLIC_SHOP =
-  "id,name,description,whatsapp_number,logo_url,timezone,currency,is_available,unavailable_until,unavailable_note";
+  "id,name,description,whatsapp_number,instagram_url,logo_url,timezone,currency,is_available,unavailable_until,unavailable_note";
 
 // Public reads contain no financial queries. RLS independently enforces this split.
-export async function getPublicShop() {
+export const getPublicShop = cache(async () => {
   if (!isConfigured()) {
     const { address: _address, maps_url: _maps, ...shop } = demoShop;
     return { shop: shop as PublicShop, hours: demoHours, preview: true };
@@ -27,24 +38,51 @@ export async function getPublicShop() {
     hours: hours.data as Hours[],
     preview: false,
   };
-}
-// Visitors can read booked start times only; the column grant hides who booked.
-export async function getBookedSlots(): Promise<string[]> {
+});
+// University browsing never includes locations; customers confirm them with the owner.
+const PUBLIC_VISIT = "id,reserved_from,starts_at,ends_at,reserved_until,services,is_open";
+
+// Services, prices, areas, extras and upcoming visits: what the booking pages need.
+// RLS hides inactive services, areas and charges from visitors.
+export const getCatalog = cache(async (): Promise<Catalog> => {
+  if (!isConfigured()) return demoCatalog;
+  const db = createPublicClient();
+  const [services, areas, extras, visits] = await Promise.all([
+    db.from("services").select("*").order("sort_order").order("name"),
+    db.from("house_call_areas").select("*").order("sort_order").order("name"),
+    db.from("extra_charges").select("*").order("sort_order").order("label"),
+    db
+      .from("university_visits")
+      .select(PUBLIC_VISIT)
+      .gt("reserved_until", new Date().toISOString())
+      .order("starts_at"),
+  ]);
+  if (services.error || areas.error || extras.error || visits.error)
+    throw new Error("Unable to load services and prices.");
+  return {
+    services: services.data,
+    areas: areas.data,
+    extras: extras.data,
+    visits: visits.data,
+  } as Catalog;
+});
+// Visitors can read booked times only; the column grant hides who booked.
+export async function getBusy(): Promise<Busy[]> {
   if (!isConfigured()) return [];
   const db = createPublicClient();
-  const slots: string[] = [];
+  const busy: Busy[] = [];
   for (let offset = 0; ; offset += 500) {
     const { data, error } = await db
       .from("bookings")
-      .select("slot_start")
-      .gte("slot_start", new Date().toISOString())
+      .select("slot_start,slot_end")
+      .gt("slot_end", new Date().toISOString())
       .order("slot_start")
       .range(offset, offset + 499);
     if (error) throw new Error("Unable to load booked times.");
-    slots.push(...data.map((row) => row.slot_start as string));
+    busy.push(...(data as Busy[]));
     if (data.length < 500) break;
   }
-  return slots;
+  return busy;
 }
 export async function getUpcomingBookings(): Promise<Booking[]> {
   const db = await requireOwner();
@@ -84,6 +122,29 @@ export async function getOwnerShop() {
     shop: shop.data as Shop,
     hours: hours.data as Hours[],
   };
+}
+// Everything the owner manages, including hidden services and paused visits.
+export async function getOwnerCatalog() {
+  const db = await requireOwner();
+  const [services, areas, extras, visits] = await Promise.all([
+    db.from("services").select("*").order("sort_order").order("name"),
+    db.from("house_call_areas").select("*").order("sort_order").order("name"),
+    db.from("extra_charges").select("*").order("sort_order").order("label"),
+    // shortcut: the latest 100 visits; past ones are kept only to duplicate them.
+    db
+      .from("university_visits")
+      .select(PUBLIC_VISIT)
+      .order("starts_at", { ascending: false })
+      .limit(100),
+  ]);
+  if (services.error || areas.error || extras.error || visits.error)
+    throw new Error("Could not load services and visits.");
+  return {
+    services: services.data,
+    areas: areas.data,
+    extras: extras.data,
+    visits: visits.data as Visit[],
+  } as Catalog & { visits: Visit[] };
 }
 export async function getDayEntries(day: string): Promise<Earning[]> {
   const db = await requireOwner();

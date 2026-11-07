@@ -1,6 +1,6 @@
 # Aqil Barber
 
-A mobile-first website and private workspace for one barbershop owner. Customers can choose a preferred date and arrival time, see opening hours, and contact the owner without creating an account. There is no service menu or fixed customer pricing. The owner signs in to manage the shop and manually record earnings.
+A mobile-first website and private workspace for one barbershop owner. Customers choose a service, see its price and duration, then book a shop appointment, house call, or UIS university visit without creating an account. The owner manages services, prices, house-call areas, university visits, and the shop schedule, and records earnings manually.
 
 Built with **Next.js 15 App Router, TypeScript, Tailwind CSS, Supabase, date-fns, date-fns-tz, and lucide-react**. No paid APIs, UI framework, email delivery, or scheduled jobs are required.
 
@@ -45,10 +45,10 @@ A migration is a text file of SQL instructions that creates database tables, val
 2. In this project, open `supabase/migrations/20261021162754_initial_shop.sql`.
 3. Copy **the entire file**, paste it into the SQL Editor, and click **Run**. Run this migration once on a fresh project. If it fails, resolve the error before continuing; do not ignore a partially applied migration.
 4. Start another query. Copy the entire contents of `supabase/migrations/20261022090000_bookings.sql`, paste, and run. Then do the same with `supabase/migrations/20261022100000_bookings_privileges.sql`: Supabase gives visitors full access to new tables by default, and this removes it so they can see booked times but never names, phones or addresses. It adds customer bookings and allows a midnight (00:00) closing time.
-5. Start another query. Copy the entire contents of `supabase/seed.sql`, paste, and run.
-6. In **Table Editor**, check that `shop_settings` has one row and `weekly_hours` has all seven weekdays. The original migration also includes a legacy `services` table; the current app does not use it or its sample prices.
+5. Run `supabase/migrations/20261022120000_private_shop_address.sql`, then `supabase/migrations/20261107090000_services_and_uni_visits.sql`, each once and in that order. These protect private directions, reuse the legacy services table, seed the initial real price list, and add visits, booking snapshots, and interval conflict protection. On an existing project, run only migrations it has not already applied. Existing bookings and earnings are preserved; old bookings have no recorded agreed price.
+6. Run `supabase/seed.sql`. It fills missing shop settings and weekly hours without overwriting owner edits. Check that `shop_settings` has one row and `weekly_hours` has all seven weekdays.
 
-The sample schedule is Monday–Saturday, 10 AM–9 PM; Sunday is closed. Replace the placeholder address and add a real contact number in Settings after login. There are no fake earnings or owner passwords in the seed.
+The sample schedule is daily, 3 PM–midnight, with a 6:30–8 PM break. Replace the placeholder address and add a real contact number in Settings after login. There are no fake earnings or owner passwords in the seed.
 
 The migration also adds the public tables to `supabase_realtime` when that publication exists. This lets an already-open visitor page refresh after an owner edit. The app also refreshes every 30 seconds and on returning to a browser tab, as a fallback. Only the public profile and hours are subscribed to; earnings are not published.
 
@@ -107,20 +107,24 @@ npm run dev
 
 Open:
 
-- **http://localhost:3000** — the customer view.
+- **http://localhost:3000** — shop and house-call bookings.
+- **http://localhost:3000/uni** — UIS visits and student bookings.
 - **http://localhost:3000/admin** — the owner dashboard (not linked from the shop). Redirects to the login screen until signed in.
 
 On a phone, use your computer's local network address with port `3000` while both devices are on the same trusted Wi-Fi. Your computer's firewall must allow the local development server. This is for local testing, not hosting your live business.
 
 After signing in:
 
-1. **Settings:** replace the sample profile, address, and photo URL. The WhatsApp number must include the country code and digits only, e.g. `60123456789`. A direct public HTTPS image URL is optional. Google Maps should be an HTTPS share link.
-2. **Hours:** tap a day, choose whether it is open, then set opening/closing times. Times use 15-minute increments. An optional break must fit entirely inside the open interval. Overnight hours are not supported.
+1. **Settings:** replace the sample profile, address, and photo URL. The WhatsApp number must include the country code and digits only, e.g. `60123456789`. A direct public HTTPS image URL and Instagram link are optional. Google Maps should be an HTTPS share link. The shop name, house-call coverage, and Instagram link on the public page follow these saved values.
+2. **Hours:** tap a day, choose whether it is open, then set opening/closing times. Times use 15-minute increments. An optional break must fit entirely inside the open interval. Midnight closing is supported; overnight hours are not. Edits that would invalidate a future appointment are blocked until you resolve that booking. Timezone changes are blocked while future bookings or visits remain.
 3. **Home:** tap the availability switch to turn on away mode. The return date and note are optional. Save to apply it. Tap the switch again to make the shop available.
 4. **Home → Add earnings:** type an amount, then Save. Note and payment method are optional. Tap an existing entry to edit it; deleting requires confirmation.
 5. **History:** see the last seven days, week/month totals, and past daily entries. Tap a day to edit its entries.
 
-On phones the four tabs are at the bottom; at widths of 1024px or more, they move to the left sidebar. Sign out from Settings on mobile. The interface follows your device's light/dark setting.
+6. **Settings → Services & prices:** add or edit services, their durations, shop prices, university prices, and prices for each house-call area. A blank price means the service is not offered there. Hide services or areas to stop new bookings while keeping historical agreements. Set optional extra-charge rules by appointment time or booking notice; charges without a rule are listed for WhatsApp arrangements and never silently added online.
+7. **Bookings → Uni visits:** create a visit with a date, hours, offered services, and travel/setup buffers. University locations are agreed directly with the owner on WhatsApp; no general meeting area, meeting spot, or map link is entered or displayed in the visit manager. A visit price overrides the service’s university price; blank uses the university price. A valid owner WhatsApp number is required to open a visit. Duplicate a visit to reuse its settings. Pausing stops new bookings while retaining the reserved window and all existing appointments. Cancel its bookings individually before cancelling the whole visit. Use each customer’s WhatsApp link to arrange or confirm the location directly.
+
+On phones the five tabs are at the bottom; at widths of 1024px or more, they move to the left sidebar. Sign out from Settings on mobile. The interface follows your device's light/dark setting.
 
 ## 7. Verify it before relying on it
 
@@ -141,7 +145,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Stop `npm run dev` first, since Next's development/build output folder cannot be safely shared between simultaneous processes. The tests start isolated processes on ports **3100** and **54329**. They use a local, test-only Supabase HTTP stand-in with real Postgres underneath. They cover mobile login, protection, add/edit/delete confirmation, hours, away mode, settings, and time-only WhatsApp requests. Screenshots are saved to `test-results/`. They do **not** verify Supabase's hosted Auth service, hosted Realtime, or your cloud configuration. The stand-in is never imported by the application.
+Stop `npm run dev` first, since Next's development/build output folder cannot be safely shared between simultaneous processes. The tests start isolated processes on ports **3100** and **54329**. They use a local, test-only Supabase HTTP stand-in with real Postgres underneath. They cover mobile login, access protection, earnings, hours, away mode, settings, service/price edits, shared availability, university visits, and BM/EN WhatsApp location confirmation. Screenshots are saved to `test-results/`. They do **not** verify Supabase's hosted Auth service, hosted Realtime, or your cloud configuration. The stand-in is never imported by the application.
 
 Also verify your real Supabase project:
 
@@ -153,11 +157,11 @@ Also verify your real Supabase project:
    npm run verify:rls
    ```
 
-   It should print PASS: the public shop can be read, earnings return zero rows, and the earnings-total function is denied.
+   It should print PASS: public browsing works while shop directions, exact university meeting points, customer details, earnings, and owner writes remain protected.
 
 4. Open the shop in a private/incognito browser. Confirm it shows the timetable and opening hours, and `/admin` redirects to the login screen.
 5. Turn on away mode without a return date. The private browser should show **Not available until further notice** and the note.
-6. Make the shop available again. Check that hours edits reach the visitor page and that the timetable excludes breaks. Select a time and check the WhatsApp request includes the chosen date and time.
+6. Make the shop available again. Check that hours edits reach the visitor page and that the timetable excludes breaks. Book a test appointment and check the saved confirmation and prepared WhatsApp message. Also check a university booking in BM and EN: it must ask the student to confirm the location on WhatsApp, with the correct owner number, student name, service, date, time, and a location-confirmation request, with no proposed location.
 7. Check that editing an entry updates its total, and cancelling a delete confirmation preserves it.
 8. Remove the test entry through the dashboard when done.
 
@@ -198,10 +202,14 @@ Later code changes deploy when pushed to GitHub. Hours, earnings, and profile up
 ## Where things live
 
 ```text
-app/page.tsx                         Public shop page
+app/page.tsx                         Public shop and house-call bookings
+app/uni/page.tsx                     University visits and student bookings
 app/admin/login/                    Owner ID/password login and its server action
 app/admin/(dashboard)/              Protected pages and mobile/desktop shell
   page.tsx                          Today's earnings and availability
+  bookings/page.tsx                  Upcoming and past bookings
+  services/page.tsx                  Services, prices, house-call areas and extras
+  visits/page.tsx                    University visits and affected customers
   hours/page.tsx                     Weekly schedule
   history/page.tsx                   Totals and past days
   history/[date]/page.tsx            Entries on one date
@@ -210,6 +218,7 @@ app/admin/*-actions.ts               Validated server-side writes
 components/                         Small UI pieces and forms
 lib/time.ts                         All calendar, timezone, hours/away logic
 lib/money.ts                        Currency display and integer-cent sums
+lib/pricing.ts                      Service/visit price precedence and extra-charge quotes
 lib/auth.ts                         Server-side owner authorization
 lib/data.ts                         Database reads and pagination
 lib/validation.ts                   Shared Zod validation
@@ -226,8 +235,8 @@ The parentheses in `(dashboard)` make a Next.js **route group**. They keep the l
 ## Security and small implementation choices
 
 - All writes use Server Actions, validate input, and verify the allowed owner. Middleware is an additional navigation guard. RLS remains the final boundary even if someone calls Supabase directly.
-- `private.shop_owner` contains the only allowed owner UID. It is not in an exposed API schema and uses its own RLS. Public shop settings contain only public information.
-- Anonymous visitors can read the shop profile and hours, but see zero earnings rows. A different logged-in account also sees zero earnings. No service-role key or security-definer function is used.
+- `private.shop_owner` contains the only allowed owner UID. It is not in an exposed API schema and uses its own RLS. Column grants hide the shop address and map link from anonymous readers; university meeting directions are protected the same way.
+- Anonymous visitors can read the shop profile and hours, but see zero earnings rows. A different logged-in account also sees zero earnings. No service-role key is used. Carefully scoped security-definer functions check owner identity, stamp trusted booking details, and return directions to the holder of a saved booking ID. Their search paths are fixed; ordinary management writes use owner RLS.
 - Native `<dialog>` supplies keyboard focus trapping and Escape handling for earnings sheets. Native time inputs improve mobile reliability.
 - **Zod** is the extra runtime dependency for server validation; TypeScript alone cannot validate requests sent over a network. **@supabase/ssr** manages secure request-specific cookie sessions. **server-only** prevents database helpers from accidentally entering client bundles.
 - **Vitest**, **PGlite**, **Playwright**, and **Supabase CLI** are development tools, not paid services. PGlite lets you verify real Postgres RLS without Docker. The CLI is available for later migrations; beginners can use SQL Editor as above.
@@ -250,7 +259,11 @@ The parentheses in `(dashboard)` make a Next.js **route group**. They keep the l
 
 Core MVP features are implemented. The app can be built and tested locally without cloud credentials. Hosted Supabase Auth, hosted Realtime, and the final deployment must be verified after you create and connect your own project. A successful local test does not claim a deployment happened.
 
-**Customer bookings:** visitors choose a date up to 30 days ahead and a 30-minute slot based on opening hours (a 00:00 closing time means midnight). Past times, breaks, and closed days are excluded; booked slots show grayed out. A booking stores name, WhatsApp number, location (shop or Putrajaya/Cyberjaya/Bangi house call) and address in `public.bookings`. A unique start time prevents double booking. Visitors can read booked times only, never who booked; the owner sees and cancels bookings on the admin Home page. The shop address is shown only on the confirmation screen, but it is still public data in `shop_settings`. There is no anti-spam: anyone can book a free slot, and the owner cancels fakes. Prices live in `components/price-list.tsx`.
+**Customer bookings:** customers choose a service before a half-hour start time. The whole service duration must fit within opening hours or the chosen university visit, without overlapping a break or another appointment. Shop/house-call dates extend 30 days ahead; university bookings follow published visits. A visit reserves its entire window, including buffers, against other appointments even when paused. Away mode pauses all new bookings; visits can otherwise run outside weekly shop hours.
+
+The database computes each new booking’s service, end time, base price, applicable extras, final total, and location snapshot, and rejects stale price quotes. Interval exclusion constraints prevent overlapping appointments and visits; shared transaction locks protect booking/visit/schedule checks. Catalogue edits affect new bookings only. Earlier bookings keep unknown prices rather than invented historical amounts. An unchanged booking ID survives a lost response and refresh through sessionStorage so retries do not create another reservation.
+
+Visitors can read busy intervals but no customer details. Shop directions are returned only after a saved shop booking. University bookings do not return or display directions; confirmation prompts the student to agree on the location through the configured owner’s WhatsApp; opening that prepared message neither sends it nor confirms a location. Earnings remain manual. There is no anti-spam: anyone can reserve a free appointment, and the owner cancels fakes.
 
 **Local preview with a working database:** `node tests/fixtures/supabase-server.mjs` plus `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54329 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=test-publishable-key npx next dev` runs the app against an in-memory test database (data resets on restart). Run the stand-in with `node --env-file-if-exists=.env.local` so it accepts `LOCAL_OWNER_PASSWORD` from `.env.local` for the owner login (local preview only). Actual earnings remain manual. The MVP excludes payments, SMS, staff accounts, customer accounts, and multiple locations.
 

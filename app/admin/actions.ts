@@ -19,6 +19,8 @@ export async function saveHours(input: unknown): Promise<ActionResult> {
       fields: validationFields(parsed.error),
     };
   const { error } = await db.from("weekly_hours").upsert(parsed.data);
+  if (error?.message.includes("Resolve affected bookings"))
+    return { ok: false, message: "Resolve affected bookings before changing these hours." };
   if (error) return { ok: false, message: "Couldn’t save hours. Please try again." };
   revalidatePath("/", "layout");
   return { ok: true, message: "Opening hours saved." };

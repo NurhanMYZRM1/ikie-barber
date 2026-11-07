@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Oswald } from "next/font/google";
 import { LangProvider } from "@/components/lang";
 import { getLang, getT } from "@/lib/lang";
+import { getCatalog, getPublicShop } from "@/lib/data";
+import { houseCallAreaNames } from "@/lib/pricing";
 import "./globals.css";
 
 // Condensed headings echo the shop's poster. next/font self-hosts it at build time.
@@ -9,11 +11,13 @@ const display = Oswald({ subsets: ["latin"], variable: "--font-display", display
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getT();
+  const [lang, { shop }, catalog] = await Promise.all([getLang(), getPublicShop(), getCatalog()]);
+  const areas = houseCallAreaNames(catalog, lang);
   return {
-    title: `Ikie Barber — ${t("Good hair. Good mood. Anywhere.")}`,
-    description: t(
-      "Barber at the shop or house call in Putrajaya, Cyberjaya and Bangi. Book a time online.",
-    ),
+    title: `${shop.name} — ${t("Good hair. Good mood. Anywhere.")}`,
+    description: areas
+      ? t("Barber at the shop or house call in {areas}. Book a time online.", { areas })
+      : t("Book your haircut at the shop."),
   };
 }
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };

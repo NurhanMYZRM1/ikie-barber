@@ -1,6 +1,6 @@
 import { addDays, format, isMatch, parseISO, startOfMonth, startOfWeek } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
-import type { Hours, PublicShop } from "./types";
+import type { Busy, Hours, PublicShop, PublicVisit } from "./types";
 import { dateLocale, translate, type Lang } from "./i18n";
 
 export const DEFAULT_TIMEZONE = "Asia/Kuala_Lumpur";
@@ -127,15 +127,22 @@ export function getShopStatus(
 }
 
 export type PreferredTime = { start: string; label: string; booked: boolean };
+const overlaps = (busy: Busy[], start: number, end: number) =>
+  busy.some(
+    (range) =>
+      new Date(range.slot_start).getTime() < end && new Date(range.slot_end).getTime() > start,
+  );
 
-/** Bookable 30-minute slots from opening time, skipping the break and closing.
- * Booked slots stay in the list (flagged) so the timetable can gray them out. */
+/** Half-hourly start times for a service of `minutes`, from opening time. The whole
+ * appointment must fit before the break and closing. Times overlapping `busy` (other
+ * bookings, visit windows) stay in the list, flagged, so the timetable can gray them out. */
 export function getPreferredTimes(
   shop: PublicShop,
   hours: Hours[],
   day: string,
   now = new Date(),
-  booked: string[] = [],
+  busy: Busy[] = [],
+  minutes = 30,
 ): PreferredTime[] {
   if (!isMatch(day, "yyyy-MM-dd") || day < getShopToday(shop.timezone, now)) return [];
   if (!isShopAvailable(shop, now)) return [];
@@ -143,18 +150,17 @@ export function getPreferredTimes(
   if (!row?.is_open) return [];
 
   const toMinutes = (time: string) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
-  const taken = new Set(booked.map((start) => new Date(start).getTime()));
   const times: PreferredTime[] = [];
   for (
     let minute = toMinutes(row.open_time);
-    minute < toMinutes(until(row.close_time));
+    minute + minutes <= toMinutes(until(row.close_time));
     minute += 30
   ) {
     if (
       row.break_start &&
       row.break_end &&
-      minute >= toMinutes(row.break_start) &&
-      minute < toMinutes(row.break_end)
+      minute < toMinutes(row.break_end) &&
+      minute + minutes > toMinutes(row.break_start)
     )
       continue;
     const clock = `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
@@ -168,7 +174,33 @@ export function getPreferredTimes(
     times.push({
       start: instant.toISOString(),
       label: timeLabel(clock),
-      booked: taken.has(instant.getTime()),
+      booked: overlaps(busy, instant.getTime(), instant.getTime() + minutes * 60_000),
+    });
+  }
+  return times;
+}
+
+/** Half-hourly start times inside a uni visit's hours; the appointment must end by its end. */
+export function getVisitTimes(
+  visit: Pick<PublicVisit, "starts_at" | "ends_at">,
+  timezone: string,
+  now = new Date(),
+  busy: Busy[] = [],
+  minutes = 30,
+): PreferredTime[] {
+  const times: PreferredTime[] = [];
+  const end = new Date(visit.ends_at).getTime();
+  for (
+    let start = new Date(visit.starts_at).getTime();
+    start + minutes * 60_000 <= end;
+    start += 1_800_000
+  ) {
+    if (start <= now.getTime()) continue;
+    const iso = new Date(start).toISOString();
+    times.push({
+      start: iso,
+      label: shopClock(iso, timezone),
+      booked: overlaps(busy, start, start + minutes * 60_000),
     });
   }
   return times;

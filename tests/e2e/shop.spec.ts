@@ -2,6 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { getShopToday, shiftDay, calendarLabel, weekday } from "../../lib/time";
 import { fromZonedTime } from "date-fns-tz";
 
+const HAIRCUT = "20000000-0000-4000-8000-000000000001";
 // Test-only ID from playwright.config.ts; password is the stand-in's default.
 async function signIn(page: Page) {
   await page.goto("/admin/login");
@@ -30,6 +31,8 @@ test("public shop is responsive and owner routes need login", async ({ page }) =
     "/admin/history",
     "/admin/settings",
     "/admin/history/2026-10-21",
+    "/admin/services",
+    "/admin/visits",
   ]) {
     await page.goto(route);
     await expect(page).toHaveURL(/\/admin\/login$/);
@@ -113,7 +116,8 @@ test("customers book a slot, it grays out, and the owner can cancel it", async (
   await page.getByRole("button", { name: "3:00 PM", exact: true }).click();
   await page.getByLabel("Your name").fill("Ali");
   await page.getByLabel("WhatsApp number").fill("012-345 6789");
-  await page.getByLabel("Where").selectOption("Bangi");
+  await page.getByLabel("Where").selectOption({ label: "Bangi house call · RM 35.00" });
+  await expect(page.getByLabel("Price", { exact: true })).toContainText("RM 35.00");
   await expect(page.getByLabel("Your address")).toHaveAttribute("required", "");
   await page.getByLabel("Your address").fill("No. 1, Jalan Bangi");
   await page.locator("#booking-form").getByRole("button", { name: "Book this time" }).click();
@@ -133,7 +137,7 @@ test("customers book a slot, it grays out, and the owner can cancel it", async (
   await expect(page.getByRole("button", { name: "3:00 PM, booked" })).toBeDisabled();
 
   await signIn(page);
-  await expect(page.getByText("Ali · Bangi house call")).toBeVisible();
+  await expect(page.getByText("Ali · Haircut · Bangi house call")).toBeVisible();
   await expect(page.getByRole("link", { name: "+60123456789" })).toBeVisible();
   // The Bookings page lists it as upcoming; past bookings are read-only.
   await page.getByRole("link", { name: "See all bookings" }).click();
@@ -142,7 +146,8 @@ test("customers book a slot, it grays out, and the owner can cancel it", async (
     "page",
   );
   const upcoming = page.getByRole("region", { name: "Upcoming bookings" });
-  await expect(upcoming.getByText("Ali · Bangi house call")).toBeVisible();
+  await expect(upcoming.getByText("Ali · Haircut · Bangi house call")).toBeVisible();
+  await expect(upcoming).toContainText("RM 35.00");
   // The house-call address opens in Waze or Google Maps.
   const waze = upcoming.getByRole("link", { name: "Waze directions to Ali" });
   expect(new URL((await waze.getAttribute("href"))!).searchParams.get("q")).toBe(
@@ -317,10 +322,266 @@ test("a clash marks the slot taken and keeps the customer's details", async ({ p
     "Asia/Kuala_Lumpur",
   );
   await request.post("http://127.0.0.1:54329/rest/v1/bookings", {
-    data: { slot_start: start.toISOString(), name: "Other", phone: "60111111111", area: "Shop" },
+    data: {
+      slot_start: start.toISOString(),
+      name: "Other",
+      phone: "60111111111",
+      kind: "shop",
+      service_id: HAIRCUT,
+      total: 8,
+    },
   });
   await page.locator("#booking-form").getByRole("button", { name: "Book this time" }).click();
   await expect(page.getByText("That time was just booked. Choose another.")).toBeVisible();
   await expect(page.getByRole("button", { name: `${label}, booked` })).toBeDisabled();
   await expect(page.getByLabel("Your name")).toHaveValue("Ali");
+});
+
+test("owner adds a service and changes a price; booked prices stay as agreed", async ({
+  page,
+  request,
+}) => {
+  const today = getShopToday();
+  const monday = shiftDay(today, 7 - weekday(today));
+  await request.post("http://127.0.0.1:54329/rest/v1/bookings", {
+    data: {
+      slot_start: fromZonedTime(`${monday}T16:00:00`, "Asia/Kuala_Lumpur").toISOString(),
+      name: "Early",
+      phone: "60111111111",
+      kind: "shop",
+      service_id: HAIRCUT,
+      total: 8,
+    },
+  });
+  await signIn(page);
+  await page.goto("/admin/settings");
+  await page.getByRole("link", { name: /Services & prices/ }).click();
+  await page.getByRole("button", { name: /^Haircut/ }).click();
+  await page.getByLabel("At the shop").fill("9");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("button", { name: /^Haircut.*RM 9\.00/ })).toBeVisible();
+  await page.getByRole("button", { name: "Add a service" }).click();
+  await page.getByLabel("Service name").fill("Beard trim");
+  await page.getByLabel("Length (minutes)").fill("20");
+  await page.getByLabel("At the shop").last().fill("5");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("button", { name: /^Beard trim/ })).toBeVisible();
+
+  await page.goto("/");
+  const prices = page.getByRole("region", { name: "Price list" });
+  await expect(prices).toContainText("Beard trim");
+  await expect(prices).toContainText("RM 9.00");
+  await page.getByRole("button", { name: /Beard trim/ }).click();
+  await page.getByLabel("Visit date", { exact: true }).fill(monday);
+  await page.getByRole("button", { name: "5:00 PM", exact: true }).click();
+  await expect(page.getByLabel("Price", { exact: true })).toContainText("RM 5.00");
+
+  await page.goto("/admin/bookings");
+  await expect(page.getByRole("region", { name: "Upcoming bookings" })).toContainText(
+    "Early · Haircut · At the shop · RM 8.00",
+  );
+});
+
+test("saved coverage and contact changes reach the public page and metadata", async ({ page }) => {
+  await signIn(page);
+  await page.goto("/admin/settings");
+  await page.getByLabel("Shop name", { exact: true }).fill("Campus Cuts");
+  await page.getByLabel("Instagram link (optional)").fill("https://www.instagram.com/campuscuts/");
+  await page.getByRole("button", { name: "Save shop details" }).click();
+  await expect(page.getByText("Shop details saved.")).toBeVisible();
+  await page.goto("/admin/services");
+  await page.getByRole("button", { name: "Bangi", exact: true }).click();
+  await page.getByLabel("Area name").fill("Kajang");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Kajang", exact: true })).toBeVisible();
+  await page.goto("/");
+  await expect(
+    page.getByText("Haircuts at the shop, or I come to you in Putrajaya, Cyberjaya, and Kajang."),
+  ).toBeVisible();
+  await expect(page).toHaveTitle(/Campus Cuts/);
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /Kajang/);
+  await expect(page.locator('meta[name="description"]')).not.toHaveAttribute("content", /Bangi/);
+  await expect(page.getByRole("link", { name: "Instagram", exact: true })).toHaveAttribute(
+    "href",
+    "https://www.instagram.com/campuscuts/",
+  );
+  await page.getByRole("button", { name: "BM", exact: true }).click();
+  await expect(
+    page.getByText(
+      "Gunting rambut di kedai, atau saya datang ke rumah anda di Putrajaya, Cyberjaya dan Kajang.",
+    ),
+  ).toBeVisible();
+});
+
+test("refresh recovers a saved booking after its response is lost", async ({ page }) => {
+  await page.goto("/");
+  await page
+    .getByRole("group", { name: "Available times" })
+    .getByRole("button", { disabled: false })
+    .first()
+    .click();
+  await page.getByLabel("Your name").fill("Lost response");
+  await page.getByLabel("WhatsApp number").fill("0123456789");
+  let intercepted = false;
+  await page.route("**/*", async (route) => {
+    if (
+      !intercepted &&
+      route.request().method() === "POST" &&
+      route.request().headers()["next-action"]
+    ) {
+      intercepted = true;
+      await route.fetch(); // Let the database save before discarding the response.
+      await route.abort("failed");
+    } else await route.continue();
+  });
+  await page.locator("#booking-form").getByRole("button", { name: "Book this time" }).click();
+  await expect(
+    page.getByText("Couldn’t send your booking. Check your connection and tap Book again."),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "You’re booked" })).toBeVisible();
+  await signIn(page);
+  await page.goto("/admin/bookings");
+  await expect(page.getByText(/Lost response · Haircut/)).toHaveCount(1);
+});
+
+test("uni visits have no location fields and require direct WhatsApp confirmation", async ({
+  page,
+  browser,
+  request,
+}) => {
+  const tomorrow = shiftDay(getShopToday(), 1);
+  await signIn(page);
+  await page.goto("/admin/bookings");
+  await page.getByRole("link", { name: /Uni visits/ }).click();
+  await page.getByRole("button", { name: "New visit" }).click();
+  await page.getByLabel("Starts").fill("15:00");
+  await page.getByLabel("Ends").fill("17:00");
+  await expect(page.getByLabel("General meeting area")).toHaveCount(0);
+  await expect(page.getByLabel(/Exact meeting point/)).toHaveCount(0);
+  await expect(page.getByLabel(/Map link/)).toHaveCount(0);
+  await page.getByRole("checkbox", { name: "Haircut", exact: true }).check();
+  await page.getByLabel("Visit price for Haircut").fill("6");
+  await page.getByRole("button", { name: "Save visit" }).click();
+  const visit = page.getByRole("article");
+  await expect(visit).toContainText("Haircut RM 6.00");
+
+  // Duplicate scheduling and prices without any location fields.
+  await visit.getByRole("button", { name: "Duplicate" }).click();
+  await expect(page.getByLabel("General meeting area")).toHaveCount(0);
+  await page.getByRole("button", { name: "Save visit" }).click();
+  await expect(page.getByRole("article")).toHaveCount(2);
+
+  // Existing records may still have locations: none may reappear in the app.
+  const auth = await request.post("http://127.0.0.1:54329/auth/v1/token", {
+    data: { email: "owner@example.test", password: "test-password-only" },
+  });
+  const { access_token } = await auth.json();
+  const legacy = await request.patch("http://127.0.0.1:54329/rest/v1/university_visits", {
+    headers: { Authorization: `Bearer ${access_token}` },
+    data: {
+      area_label: "Old campus area",
+      meeting_point: "Old meeting point",
+      map_url: "https://maps.app/old",
+    },
+  });
+  expect(legacy.ok()).toBe(true);
+  await page.reload();
+  await expect(page.getByText(/Old campus area|Old meeting point/)).toHaveCount(0);
+
+  // The visit and its travel/setup time close those shop times.
+  await page.goto("/");
+  await page.getByLabel("Visit date", { exact: true }).fill(tomorrow);
+  await expect(page.getByRole("button", { name: "3:00 PM, booked" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "5:00 PM, booked" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "5:30 PM", exact: true })).toBeEnabled();
+  await page.getByRole("link", { name: "See uni visits" }).click();
+
+  await expect(page.getByRole("heading", { name: "For uni students" })).toBeVisible();
+  await expect(
+    page.getByText(
+      "I come to Universiti Islam Selangor (UIS) on set days. Pick a visit, a haircut and a time; we confirm the exact spot on WhatsApp.",
+    ),
+  ).toHaveCount(0);
+  expect(await page.content()).not.toContain("Old campus area");
+  expect(await page.content()).not.toContain("Old meeting point");
+  await page.getByRole("group", { name: "Uni visits" }).getByRole("button").first().click();
+  await expect(page.getByRole("group", { name: "Haircuts" })).toContainText("RM 6.00");
+  await page.getByRole("button", { name: "3:00 PM", exact: true }).click();
+  await page.getByLabel("Your name").fill("Ali");
+  await page.getByLabel("WhatsApp number").fill("0123456789");
+  await page.locator("#booking-form").getByRole("button", { name: "Book this time" }).click();
+  await expect(page.getByRole("heading", { name: "You’re booked" })).toBeFocused();
+  await expect(
+    page.getByText(
+      "Your booking is saved. Please confirm the haircut location with the owner via WhatsApp before your appointment.",
+    ),
+  ).toBeVisible();
+  await expect(page.getByText("Proposed meeting point")).toHaveCount(0);
+  await expect(page.getByText("Where", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Google Maps" })).toHaveCount(0);
+  expect(await page.content()).not.toContain("Old meeting point");
+  const confirm = new URL(
+    (await page.getByRole("link", { name: "Confirm location on WhatsApp" }).getAttribute("href"))!,
+  );
+  expect(confirm.pathname).toBe("/601157878404");
+  const text = confirm.searchParams.get("text")!;
+  for (const part of [
+    "Ali",
+    "Haircut",
+    calendarLabel(tomorrow, "EEEE, d MMMM yyyy"),
+    "3:00 PM",
+    "Please confirm the haircut location.",
+  ])
+    expect(text).toContain(part);
+  expect(text).not.toContain("Old meeting point");
+  expect(text).not.toContain("Proposed meeting point");
+  await page.screenshot({ path: "test-results/uni-booked-mobile.png", fullPage: true });
+
+  // In Malay, the same step with the Malay wording.
+  const malay = await browser.newContext({
+    locale: "ms-MY",
+    viewport: { width: 375, height: 812 },
+  });
+  const student = await malay.newPage();
+  await student.goto("/uni");
+  await student
+    .getByRole("group", { name: "Lawatan universiti" })
+    .getByRole("button")
+    .first()
+    .click();
+  await student.getByRole("button", { name: "3:30 PM", exact: true }).click();
+  await student.getByLabel("Nama anda").fill("Siti");
+  await student.getByLabel("Nombor WhatsApp").fill("0129876543");
+  await student.locator("#booking-form").getByRole("button", { name: "Tempah masa ini" }).click();
+  await expect(
+    student.getByText(
+      "Tempahan anda telah disimpan. Sila sahkan lokasi potong rambut dengan pemilik melalui WhatsApp sebelum waktu temujanji anda.",
+    ),
+  ).toBeVisible();
+  const sahkan = student.getByRole("link", { name: "Sahkan lokasi melalui WhatsApp" });
+  expect(new URL((await sahkan.getAttribute("href"))!).searchParams.get("text")).toContain(
+    "Sila sahkan lokasi potong rambut.",
+  );
+  await expect(student.getByText("Cadangan tempat berjumpa")).toHaveCount(0);
+  await expect(student.getByText("Di mana", { exact: true })).toHaveCount(0);
+  await malay.close();
+
+  // Existing locations stay absent on the owner's edit form and booking lists.
+  await page.goto("/admin/visits");
+  const first = page.getByRole("article").first();
+  await expect(first.getByRole("button", { name: "Cancel visit" })).toBeDisabled();
+  await expect(page.getByText(/Old campus area|Old meeting point/)).toHaveCount(0);
+  await first.getByRole("button", { name: "Edit" }).click();
+  await expect(page.getByLabel("General meeting area")).toHaveCount(0);
+  await expect(page.getByLabel(/Exact meeting point/)).toHaveCount(0);
+  await expect(page.getByLabel(/Map link/)).toHaveCount(0);
+  await page.getByRole("button", { name: "Save visit" }).click();
+  // Pausing stops new bookings and keeps the two made.
+  await first.getByRole("button", { name: "Pause bookings" }).click();
+  await expect(first).toContainText("Paused");
+  await expect(first.getByText(/Ali · Haircut · Uni visit/)).toBeVisible();
+  await page.screenshot({ path: "test-results/owner-visits-mobile.png", fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.screenshot({ path: "test-results/owner-visits-desktop.png", fullPage: true });
 });

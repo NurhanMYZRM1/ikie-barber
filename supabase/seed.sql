@@ -9,11 +9,5 @@ insert into public.weekly_hours (day_of_week, is_open, open_time, close_time, br
 select day, true, '15:00'::time, '00:00'::time, '18:30'::time, '20:00'::time from generate_series(0, 6) as day
 on conflict do nothing;
 
-insert into public.services (id, name, price, duration_minutes, sort_order) values
-('10000000-0000-4000-8000-000000000001', 'Signature haircut', 35, 30, 0),
-('10000000-0000-4000-8000-000000000002', 'Haircut & beard', 50, 45, 1),
-('10000000-0000-4000-8000-000000000003', 'Beard trim', 20, 20, 2)
-on conflict do nothing;
-
 -- Do NOT seed earnings or an owner password. Create the owner in Auth, then
 -- insert their UUID into private.shop_owner as explained in README.md.
